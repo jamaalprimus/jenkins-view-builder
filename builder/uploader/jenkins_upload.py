@@ -1,8 +1,15 @@
 import requests
 from functools import partial
+import json
 
-headers = {'Content-type': 'text/xml'}
+def getJenkinsCrumb(url, username, token):
+    auth = (username,token)
 
+    response = requests.get(url, auth=auth)
+    crumbData = json.loads(response.text)
+
+    msg=crumbData['crumb']
+    return msg
 
 def krb_request(request_fn, config):
     response = None
@@ -26,6 +33,10 @@ def krb_request(request_fn, config):
 
 
 def post(url, payload, config):
+    headers = {
+        'Content-type': 'text/xml',
+        'Jenkins-crumb': getJenkinsCrumb(config['url'] + '/crumbIssuer/api/json', config['user'], config['password'])
+    }
     do_post = partial(requests.post, url,
                       data=payload,
                       headers=headers,
